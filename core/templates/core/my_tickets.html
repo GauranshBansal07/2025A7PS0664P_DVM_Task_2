@@ -1,0 +1,53 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<h2>🎟 My Tickets</h2>
+<hr>
+
+{% if tickets %}
+    <div class="list-group">
+    {% for ticket in tickets %}
+        <div class="list-group-item flex-column align-items-start">
+            
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">{{ ticket.source.name }} ➝ {{ ticket.destination.name }}</h5>
+                <small class="text-muted">{{ ticket.created_at|date:"M d, Y" }}</small>
+            </div>
+            
+            <p class="mb-1">Price: ${{ ticket.price }}</p>
+
+            {% if ticket.route_info %}
+                <p class="mb-1 text-info"><small><strong>Route:</strong> {{ ticket.route_info }}</small></p>
+            {% endif %}
+            
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <div>
+                    {% if ticket.status == 'CANCELLED' %}
+                        <span class="badge bg-danger">CANCELLED</span>
+                    {% elif ticket.status == 'USED' %}
+                        <span class="badge bg-secondary">USED</span>
+                    {% elif ticket.entry_time and not ticket.exit_time %}
+                        <span class="badge bg-warning text-dark">IN USE 🚇</span>
+                    {% else %}
+                        <span class="badge bg-success">ACTIVE</span>
+                    {% endif %}
+                    
+                    <a href="{% url 'ticket_confirmation' ticket.ticket_id %}" class="btn btn-sm btn-primary ms-2">View Ticket</a>
+                </div>
+
+                {% if ticket.status == 'ACTIVE' and not ticket.entry_time %}
+                    <form action="{% url 'cancel_ticket' ticket.ticket_id %}" method="POST" onsubmit="return confirm('Are you sure you want to refund this ticket?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Cancel & Refund</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        You haven't bought any tickets yet. <a href="{% url 'buy_ticket' %}">Buy one now!</a>
+    </div>
+{% endif %}
+{% endblock %}

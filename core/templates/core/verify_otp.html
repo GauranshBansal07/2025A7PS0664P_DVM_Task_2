@@ -1,0 +1,71 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4>Two-Step Verification</h4>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-center">
+                        We've sent a 6-digit verification code to <strong>{{ request.user.email }}</strong>.
+                        Please enter it below to confirm your purchase.
+                    </p>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="otp" class="form-label">Enter OTP Code</label>
+                            <input type="text" 
+                                   name="otp" 
+                                   id="otp" 
+                                   class="form-control form-control-lg text-center fw-bold" 
+                                   placeholder="000000" 
+                                   maxlength="6" 
+                                   pattern="\d{6}" 
+                                   required 
+                                   autofocus>
+                            <div class="form-text text-center mt-2">
+                                Code expires in 5 minutes.
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">Verify & Book Ticket</button>
+                            <a href="{% url 'buy_ticket' %}" class="btn btn-outline-secondary">Cancel Purchase</a>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-muted text-center">
+                    Didn't receive the email? Check your spam folder or 
+                    <a href="{% url 'buy_ticket' %}">try again</a>.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Styling for a "Boxed" OTP input look */
+    #otp {
+        letter-spacing: 0.5rem;
+        font-size: 2rem;
+        border: 2px solid #ced4da;
+    }
+    #otp:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+{% endblock %}

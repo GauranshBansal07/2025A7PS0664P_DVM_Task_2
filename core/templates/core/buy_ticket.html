@@ -1,0 +1,46 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">🎫 Buy a Metro Ticket</h4>
+            </div>
+            <div class="card-body">
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">From Station</label>
+                        <select name="source" class="form-select" required>
+                            <option value="" selected disabled>Select Origin...</option>
+                            {% for station in stations %}
+                                <option value="{{ station.id }}">{{ station.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">To Station</label>
+                        <select name="destination" class="form-select" required>
+                            <option value="" selected disabled>Select Destination...</option>
+                            {% for station in stations %}
+                                <option value="{{ station.id }}">{{ station.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="alert alert-info small">
+                        Pricing: $2.00 per km. Minimum fare is $2.00.
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 btn-lg">Purchase Ticket</button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

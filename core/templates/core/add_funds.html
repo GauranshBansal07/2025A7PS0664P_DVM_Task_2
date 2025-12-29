@@ -1,0 +1,24 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h4>💰 Add Funds</h4>
+            </div>
+            <div class="card-body text-center">
+                <h3>Current Balance: ${{ user.balance }}</h3>
+                <hr>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ form.amount.label_tag }}
+                        {{ form.amount }}
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Add Money</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            
+            <div class="card shadow-lg border-0" style="border-radius: 20px 20px 0 0; background: #2c3e50;">
+                <div class="card-body text-center py-4">
+                    <h5 class="text-white-50 mb-0" style="letter-spacing: 2px;">METRO PASS</h5>
+                    <div class="mt-2">
+                        {% if ticket.status == 'ACTIVE' %}
+                            <span class="badge bg-success px-3 py-2">VALID TICKET</span>
+                        {% else %}
+                            <span class="badge bg-danger px-3 py-2">{{ ticket.status }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-lg border-0 position-relative" style="border-radius: 0 0 20px 20px;">
+                
+                <div style="position: absolute; width: 30px; height: 30px; background: #f8f9fa; border-radius: 50%; left: -15px; top: -15px;"></div>
+                <div style="position: absolute; width: 30px; height: 30px; background: #f8f9fa; border-radius: 50%; right: -15px; top: -15px;"></div>
+
+                <div class="card-body p-4">
+                    
+                    <div class="text-center py-2">
+                        <div class="p-3 d-inline-block bg-white border rounded shadow-sm">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ ticket.ticket_id }}" 
+                                 alt="QR Code" style="width: 150px; height: 150px;">
+                        </div>
+                        
+                        <div class="mt-4 px-3">
+                            <label class="text-muted d-block small mb-1">TICKET REFERENCE (CLICK TO COPY)</label>
+                            <code id="ticketId" class="text-dark fw-bold d-block p-2 bg-light rounded" 
+                                  style="font-size: 0.8rem; word-break: break-all; cursor: pointer; border: 1px solid #eee;"
+                                  onclick="copyToClipboard()">
+                                {{ ticket.ticket_id }}
+                            </code>
+                            <span id="copyMsg" class="text-success small" style="display:none;">Copied!</span>
+                        </div>
+                    </div>
+
+                    <hr style="border-top: 2px dashed #ddd;" class="my-4">
+
+                    <div class="row align-items-center mb-4 px-2">
+                        <div class="col-5">
+                            <label class="text-muted d-block small">FROM</label>
+                            <h4 class="fw-bold mb-0">{{ ticket.source.name }}</h4>
+                        </div>
+                        <div class="col-2 text-center">
+                            <i class="bi bi-arrow-right text-primary fs-4"></i>
+                        </div>
+                        <div class="col-5 text-end">
+                            <label class="text-muted d-block small">TO</label>
+                            <h4 class="fw-bold mb-0">{{ ticket.destination.name }}</h4>
+                        </div>
+                    </div>
+
+                    <div class="row bg-light rounded p-3 mb-4 mx-0 border">
+                        <div class="col-6 mb-3 border-end">
+                            <label class="text-muted d-block small">FARE PAID</label>
+                            <span class="fw-bold text-dark">${{ ticket.price }}</span>
+                        </div>
+                        <div class="col-6 mb-3 text-end">
+                            <label class="text-muted d-block small">EXPIRY</label>
+                            <span class="fw-bold text-dark">90 Minutes</span>
+                        </div>
+                        
+                        <div class="col-12 border-top pt-2">
+                            <label class="text-muted d-block small mb-1">TRAVEL INSTRUCTIONS</label>
+                            {% if ticket.route_info %}
+                                <p class="mb-0 small text-dark fw-medium" style="line-height: 1.4;">
+                                    {{ ticket.route_info|linebreaksbr }}
+                                </p>
+                            {% else %}
+                                <p class="mb-0 small text-muted italic">Direct route / No transfers needed.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-print-none">
+                        <button onclick="window.print()" class="btn btn-primary btn-lg rounded-pill shadow-sm">
+                            <i class="bi bi-printer-fill me-2"></i>Print / Save PDF
+                        </button>
+                        <a href="{% url 'home' %}" class="btn btn-outline-secondary border-0">
+                            Book Another Ticket
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-center text-muted mt-4 small d-print-none">
+                <i class="bi bi-shield-lock me-1"></i> Secured by Metro System
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function copyToClipboard() {
+        const text = document.getElementById('ticketId').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            const msg = document.getElementById('copyMsg');
+            msg.style.display = 'block';
+            setTimeout(() => { msg.style.display = 'none'; }, 2000);
+        });
+    }
+</script>
+
+<style>
+    body { background-color: #f4f7f6; }
+    .fw-bold { letter-spacing: -0.5px; }
+    
+    @media print {
+        .d-print-none, nav, footer, .btn { display: none !important; }
+        body { background: white !important; }
+        .card { box-shadow: none !important; border: 1px solid #eee !important; }
+        .container { margin-top: 0 !important; width: 100% !important; max-width: 100% !important; }
+    }
+</style>
+{% endblock %}

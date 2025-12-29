@@ -1,0 +1,51 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<style>
+    .row-odd { background-color: #020202; }
+    .row-even { background-color: #040404; }
+    .analytics-table th { background-color: #417690; color: rgb(255, 255, 255); padding: 12px; border: 1px solid #000000; }
+    .analytics-table td { padding: 10px; border: 1px solid #000000; color: #fefefe; }
+</style>
+
+<div id="content-main" style="padding: 20px;">
+    
+    <div class="module" style="background-color: #000000; padding: 20px; border: 1px solid #000000; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        
+        <h1 style="color: #f8f7f7; margin-bottom: 20px; font-size: 24px;">
+            📊 Station Footfall Report ({{ today }})
+        </h1>
+        
+        <table class="analytics-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead>
+                <tr style="text-align: left;">
+                    <th>Station Name</th>
+                    <th>Entries 🟢</th>
+                    <th>Exits 🚪</th>
+                    <th>Total Footfall</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in stats %}
+                <tr class="{% cycle 'row-odd' 'row-even' %}" style="border-bottom: 1px solid #eee;">
+                    <td style="font-weight: bold;">{{ s.name }}</td>
+                    <td>{{ s.entries }}</td>
+                    <td>{{ s.exits }}</td>
+                    <td><strong>{{ s.total }}</strong></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="padding: 15px; text-align: center; color: #666;">No data recorded today.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div style="margin-top: 30px;">
+            <a href="/admin/" class="button" style="background-color: #79aec8; padding: 10px 15px; color: white; text-decoration: none; border-radius: 4px;">
+                ← Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4>Confirm Your Trip</h4>
+            </div>
+            <div class="card-body">
+                <h5 class="text-center">{{ source.name }} <span class="text-muted">to</span> {{ destination.name }}</h5>
+                <h2 class="text-center text-success my-3">${{ price }}</h2>
+                
+                <hr>
+
+                <h6>Navigation Instructions:</h6>
+                <ul class="list-group mb-4">
+                    {% for instruction in instructions %}
+                        <li class="list-group-item list-group-item-warning">{{ instruction }}</li>
+                    {% endfor %}
+                </ul>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Your Balance:</strong> ${{ user.balance }}
+                    </div>
+
+                    {% if can_afford %}
+                        <form action="{% url 'confirm_purchase' %}" method="POST">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-lg">Pay & Buy Ticket</button>
+                        </form>
+                    {% else %}
+                        <button class="btn btn-danger btn-lg" disabled>Insufficient Funds</button>
+                        <small class="d-block text-danger mt-1">Go to Admin to add money (for now)</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-3">
+            <a href="{% url 'buy_ticket' %}" class="text-muted">Cancel and search again</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

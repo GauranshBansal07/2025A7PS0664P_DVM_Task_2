@@ -1,0 +1,162 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="row">
+    
+    <div class="col-md-7 mb-4">
+        <h4 class="mb-3">🎟 Your Wallet (Tap to Scan)</h4>
+        
+        {% if user_tickets %}
+            <div class="list-group">
+                {% for ticket in user_tickets %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ ticket.source.name }} ➝ {{ ticket.destination.name }}</strong><br>
+                            <small class="text-muted font-monospace">{{ ticket.ticket_id|slice:":8" }}...</small>
+                            <br>
+                            
+                            {% if ticket.status == 'CANCELLED' %}
+                                <span class="badge bg-danger">CANCELLED</span>
+                            {% elif ticket.status == 'USED' %}
+                                <span class="badge bg-secondary">USED</span>
+                            {% elif ticket.entry_time and not ticket.exit_time %}
+                                <span class="badge bg-warning text-dark">IN USE 🚇</span>
+                            {% else %}
+                                <span class="badge bg-success">READY</span>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            {% if ticket.status == 'ACTIVE' %}
+                                {% if not ticket.entry_time %}
+                                    <button onclick="quickScan('{{ ticket.ticket_id }}', 'entry')" class="btn btn-sm btn-outline-success fw-bold">
+                                        Tap to Enter ➡️
+                                    </button>
+                                {% elif ticket.entry_time and not ticket.exit_time %}
+                                    <button onclick="quickScan('{{ ticket.ticket_id }}', 'exit')" class="btn btn-sm btn-warning fw-bold">
+                                        Tap to Exit 🚪
+                                    </button>
+                                {% endif %}
+                            {% else %}
+                                <button disabled class="btn btn-sm btn-light text-muted">History</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">No tickets found. <a href="{% url 'buy_ticket' %}">Buy one?</a></div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-5">
+        
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">📟 Manual Input</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small">Type a Ticket ID manually (if NFC fails).</p>
+                <input type="text" id="manualTicketId" class="form-control font-monospace mb-3" placeholder="Ticket ID...">
+                
+                <div class="d-grid gap-2">
+                    <button onclick="scanManually('entry')" class="btn btn-success">Scan Entry</button>
+                    <button onclick="scanManually('exit')" class="btn btn-warning">Scan Exit</button>
+                </div>
+                
+                <div id="resultBox" class="alert mt-3 d-none"></div>
+            </div>
+        </div>
+
+        {% if user.is_superuser %}
+        <div class="card shadow-sm border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">💵 Admin: Offline Ticket</h5>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">Issue a ticket for cash (auto-completed).</p>
+                
+                <form action="{% url 'admin_create_ticket' %}" method="POST">
+                    {% csrf_token %}
+                    <div class="mb-2">
+                        <label class="form-label small">Passenger</label>
+                        <select name="user_id" class="form-select form-select-sm">
+                            {% for u in all_users %}
+                                <option value="{{ u.id }}">{{ u.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small">From</label>
+                            <select name="source_id" class="form-select form-select-sm">
+                                {% for s in stations %}
+                                    <option value="{{ s.id }}">{{ s.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">To</label>
+                            <select name="dest_id" class="form-select form-select-sm">
+                                {% for s in stations %}
+                                    <option value="{{ s.id }}" {% if forloop.last %}selected{% endif %}>{{ s.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary w-100">💰 Issue Ticket</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+    function scanManually(gateType) {
+        const id = document.getElementById('manualTicketId').value;
+        if(!id) return alert("Please enter a Ticket ID");
+        performScan(id, gateType);
+    }
+
+    function quickScan(ticketId, gateType) {
+        performScan(ticketId, gateType);
+    }
+
+    async function performScan(ticketId, gateType) {
+        const resultBox = document.getElementById('resultBox');
+        
+        // Show loading
+        resultBox.className = 'alert mt-3 alert-secondary';
+        resultBox.innerText = 'Processing...';
+        resultBox.classList.remove('d-none');
+
+        try {
+            const response = await fetch('/api/scan/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ ticket_id: ticketId, gate_type: gateType })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                resultBox.className = 'alert mt-3 alert-success';
+                resultBox.innerHTML = `<strong>Success:</strong> ${data.message}`;
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                resultBox.className = 'alert mt-3 alert-danger';
+                resultBox.innerHTML = `<strong>Error:</strong> ${data.message}`;
+            }
+
+        } catch (error) {
+            console.error(error);
+            resultBox.innerText = 'Connection Error';
+        }
+    }
+</script>
+{% endblock %}
