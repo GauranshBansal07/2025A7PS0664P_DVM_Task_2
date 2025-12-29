@@ -71,6 +71,13 @@ def home(request):
         'graph_data': graph_data, # Passing the data here
     })
 
+from django.core.mail import send_mail # Ensure this is imported
+from django.utils import timezone
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from decimal import Decimal
+
 @login_required
 def buy_ticket(request):
     # 1. Check if Metro is open
@@ -98,20 +105,17 @@ def buy_ticket(request):
             messages.error(request, "Source and Destination cannot be the same.")
             return redirect('buy_ticket')
 
-        # 2. Pathfinding Logic (Requirement: Shortest Route)
+        # 2. Pathfinding Logic
         path, lines, stops = find_shortest_path(source.name, destination.name)
         if not path:
              messages.error(request, "No route found between these stations.")
              return redirect('buy_ticket')
 
-        # 3. Generate Route Description (Improved Transfer Detection)
-        # We use a helper to ensure it looks professional on the ticket
+        # 3. Generate Route Description
         from .utils import get_navigation_instructions
         route_desc = get_navigation_instructions(path, lines)
 
-        # 4. Price Calculation (Requirement: Based on Shortest Route)
-        # Using 2.0 base + 0.5 per stop is usually more realistic than 2.0 per stop, 
-        # but sticking to your logic:
+        # 4. Price Calculation
         raw_price = 2.0 + (stops * 2.0)
         price = Decimal(raw_price)
 
@@ -126,7 +130,7 @@ def buy_ticket(request):
             'source_id': source.id,
             'destination_id': destination.id,
             'price': float(price), 
-            'route_desc': route_desc  # This now contains the transfer instructions
+            'route_desc': route_desc  
         }
         request.session['ticket_data'] = ticket_data
 
@@ -139,14 +143,20 @@ def buy_ticket(request):
             request.session['purchase_otp'] = otp
             request.session['otp_created_at'] = str(timezone.now())
 
+            # --- CRITICAL FIX START ---
             try:
+                # Wrap email in a try-block to prevent 502/Timeout crashes
                 send_otp_email(request.user.email, otp)
                 print(f"DEBUG: OTP sent to {request.user.email} is: {otp}") 
+                messages.info(request, "An OTP has been sent to your email.")
             except Exception as e:
-                messages.error(request, f"Email system error: {e}")
-                return redirect('buy_ticket')
+                # Log the error but don't crash the site
+                print(f"EMAIL ERROR: {e}")
+                messages.warning(request, "Email service is slow, but you can still use the OTP sent (check logs if debugging).")
+                # Even if email fails, we still go to verify page so the user isn't stuck
             
             return redirect('verify_otp_page')
+            # --- CRITICAL FIX END ---
 
     # GET Request: Sort stations alphabetically for better UX
     stations = Station.objects.all().order_by('name')

@@ -26,7 +26,6 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-me-later')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.onrender.com']
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -176,3 +175,4 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASS')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
+EMAIL_TIMEOUT = 10
